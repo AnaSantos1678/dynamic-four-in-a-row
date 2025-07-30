@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4 In A Row Game</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="game-container">
+    <div id="game-settings">
+      <label for="rows">Number of rows (4–10):</label>
+      <input type="number" id="rows" min="4" max="10" value="6" />
+      <label for="columns">Number of columns (4–10):</label>
+      <input type="number" id="columns" min="4" max="10" value="7" />
+      <button onclick="startGame()">Start Game</button>
+    </div>
+    <div class="board-container">
+      <div class="balls"></div>
+    </div>
+    <div class="game-over">
+      <div id="winnerMessage" class="winner-announcement"></div>
+      <div class="line" id="winLine"></div>
+    </div>
+    <div class="game-stats">
+      <div class="stats">
+        <div class="PLAYER"></div>
+        <div id="scoreBoard" class="score-display">Player 1: 0 - Player 2: 0</div>
+        <div class="OPPONENT"></div>
+      </div>
+      <div class="btns">
+        <div class="reset-score">
+          <button onclick="resetGame()">Reset Score</button>
+          <button onclick="playAgainGame()">Play Again</button>
+        </div>
+        <script src="./game.js"></script>
+</body>
