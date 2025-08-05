@@ -24,6 +24,7 @@
   transition: opacity 0.4s ease, transform 0.4s ease;
   margin-bottom: 2px;
 }
+
 .row.drawn {
   opacity: 1;
   transform: translateX(0);
@@ -32,14 +33,13 @@
 .cell {
   width: var(--cell-size);
   height: var(--cell-size);
-  background-color: transparent;          
+  background-color: transparent;
   border: var(--cell-border);
   box-sizing: border-box;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.3s ease;
   margin: 2px;
 }
-
 
 .cell.animated {
   transform: scale(1);
@@ -48,6 +48,7 @@
 .animated-board .cell {
   transform: scale(1);
 }
+
 .cell.PLAYER {
   background-color: var(--player-color);
 }
@@ -68,6 +69,7 @@
 .winner-announcement.show-winner {
   opacity: 1;
 }
+
 .score-display {
   font-size: 1.2rem;
   font-weight: bold;

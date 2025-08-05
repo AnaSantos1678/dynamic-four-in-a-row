@@ -1,96 +1,53 @@
-let currentPlayer = 1;
-let boardState = [];
-let scores = { 1: 0, 2: 0 };
-let gameOver = false;
-
-function startGame() {
-  // scores = { 1: 0, 2: 0 }; // Reset scores
-  // localStorage.removeItem("scores"); // Clear any saved scores
-  // updateScoreDisplay();
-  loadScores(); // Load scores from localStorage
-  gameOver = false;
-  currentPlayer = 1;
-
-  const rows = parseInt(document.getElementById("rows").value);
-  const columns = parseInt(document.getElementById("columns").value);
-  const board = document.querySelector(".balls");
-  
-  board.innerHTML = "";
-  boardState = Array.from({ length: rows }, () => Array(columns).fill(0));
-
-  for (let r = 0; r < rows; r++) {
-    const rowEl = document.createElement("div");
-    rowEl.className = "row";
-
-    for (let c = 0; c < columns; c++) {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.dataset.row = r;
-      cell.dataset.col = c;
-      cell.addEventListener("click", () => {
-        const selectedCol = parseInt(cell.dataset.col);
-        dropPiece(selectedCol);
-      });
-
-      rowEl.appendChild(cell);
-    }
-    board.appendChild(rowEl);
-
-    setTimeout(() => {
-  rowEl.classList.add("drawn");
-}, r * 150);
+class GameVariables {
+  constructor(rows, columns) {
+    this.rows = rows;
+    this.columns = columns;
+    this.currentPlayer = 1;
+    this.boardState = Array.from({ length: rows }, () => Array(columns).fill(0));
+    this.scores = { 1: 0, 2: 0 };
+    this.gameOver = false;
+    this.player1Color = "Blue";
+    this.player2Color = "Red";
   }
 
-  currentPlayer = 1;
-
-}
- 
-function dropPiece(col) {
-  if (gameOver) return; 
-
-  for (let row = boardState.length - 1; row >= 0; row--) {
-    if (boardState[row][col] === 0) {
-      boardState[row][col] = currentPlayer;
-
-      const cell = document.querySelector(`.cell[data-row='${row}'][data-col='${col}']`);
-      cell.classList.add(currentPlayer === 1 ? "PLAYER" : "OPPONENT");
-      cell.classList.add("animated");
-
-      checkForGameOver();
-      if (!gameOver) {
-        currentPlayer = currentPlayer === 1 ? 2 : 1;
-      }
-      return;
-    }
+  reset() {
+    this.gameOver = false;
+    this.currentPlayer = 1;
+    this.boardState = Array.from({ length: this.rows }, () => Array(this.columns).fill(0));
   }
-  alert("Column is full! Try another one.");
-}
 
-function checkForGameOver() {
-    const winner = checkForFourInARow(boardState);
+  resetGame() {
+    this.reset();
+    this.scores = { 1: 0, 2: 0 };
+    localStorage.removeItem("scores");
+    updateScoreDisplay(this.scores);
+  }
+
+  checkForGameOver() {
+    const winner = this.checkForFourInARow(this.boardState);
     if (winner) {
-      gameOver = true;
-      
+      this.gameOver = true;
+      this.scores[winner.player]++;
+      updateScore(winner.player, this.scores);
+
       const messageEl = document.getElementById("winnerMessage");
-      const winnerText = ` Winner is Player ${winner.player}!`;
+      const winnerColor = winner.player === 1 ? gameVariables.player1Color : gameVariables.player2Color;
+      const winnerText = `Winner is ${winnerColor}!`;
       messageEl.textContent = winnerText;
       messageEl.classList.add("show-winner");
-
-      //const winnerText = ` Winner is Player ${winner.player}!`;
-      document.getElementById("winnerMessage").textContent = winnerText;
-      
-      // highlightWinningLine(winner.row, winner.column, winner.direction);
-      updateScore(winner.player);
+    } else {
+      this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
     }
   }
 
-function checkForFourInARow(board) {
-  const rows = board.length;
-  const cols = board[0].length;
-  const numOfBalls = 4;
-  function areSameAndNotNull(values) {
-    return values.every((value) => value && value === values[0]);
-  }
+  checkForFourInARow(board) {
+    const rows = board.length;
+    const cols = board[0].length;
+    const numOfBalls = 4;
+
+    const areSameAndNotNull = (values) =>
+      values.every((value) => value && value === values[0]);
+
   // Horizontal
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c <= cols - numOfBalls; c++) {
@@ -158,80 +115,91 @@ function checkForFourInARow(board) {
   return null;
 }
 
-function updateScore(winnerPlayer) {
-  scores[winnerPlayer]++;
-  localStorage.setItem("scores", JSON.stringify(scores));
-  // Update the score display
-  const scoreBoard = document.getElementById("scoreBoard");
-  scoreBoard.textContent = `Player 1: ${scores[1]} - Player 2: ${scores[2]}`;
-  // document.getElementById("scoreBoard").textContent = `Player 1: ${scores[1]} - Player 2: ${scores[2]}`;
-  updateScoreDisplay();
+}
+let gameVariables;
+
+function startGame() {
+  
+  const rows = parseInt(document.getElementById("rows").value);
+  const columns = parseInt(document.getElementById("columns").value);
+  gameVariables = new GameVariables(rows, columns);
+
+  loadScores();
+  initializeBoard();
+  updateScoreDisplay(gameVariables.scores);
+
+  document.getElementById("currentTurn").textContent = `${gameVariables.player1Color}'s Turn`;
 }
 
-function updateScoreDisplay() {
-  document.getElementById("scoreBoard").textContent = `Player 1: ${scores[1]} - Player 2: ${scores[2]}`;
-}
-function loadScores() {
-  const savedScores = localStorage.getItem("scores");
-  if (savedScores) {
-    scores = JSON.parse(savedScores);
-  }
-  updateScoreDisplay();
-}
-
-function resetBoard() {
-  currentPlayer = 1;
-  gameOver = false;
-
-  const rows = boardState.length;
-  const cols = boardState[0].length;
-  boardState = Array.from({ length: rows }, () => Array(cols).fill(0));
-
-  const board = document.querySelector(".balls");
+function initializeBoard() {
+  const board = document.getElementById("balls");
   board.innerHTML = "";
 
-  for (let r = 0; r < rows; r++) {
+  for (let r = 0; r < gameVariables.rows; r++) {
     const rowEl = document.createElement("div");
     rowEl.className = "row";
 
-    for (let c = 0; c < cols; c++) {
+    for (let c = 0; c < gameVariables.columns; c++) {
       const cell = document.createElement("div");
       cell.className = "cell";
       cell.dataset.row = r;
       cell.dataset.col = c;
-      cell.addEventListener("click", () => {
-        const selectedCol = parseInt(cell.dataset.col);
-        dropPiece(selectedCol);
-      });
-
+      cell.addEventListener("click", () => dropPiece(c));
       rowEl.appendChild(cell);
     }
-    board.appendChild(rowEl);
 
-    setTimeout(() => {
-      rowEl.classList.add("drawn");
-    }, r * 150);
+    board.appendChild(rowEl);
+    setTimeout(() => rowEl.classList.add("drawn"), r * 150);
   }
 
   document.getElementById("winnerMessage").classList.remove("show-winner");
   document.getElementById("winnerMessage").textContent = "";
-
-  updateScoreDisplay();
 }
 
+function dropPiece(col) {
+  if (gameVariables.gameOver) return;
+
+  for (let row = gameVariables.rows - 1; row >= 0; row--) {
+    if (gameVariables.boardState[row][col] === 0) {
+      gameVariables.boardState[row][col] = gameVariables.currentPlayer;
+
+      const cell = document.querySelector(`.cell[data-row='${row}'][data-col='${col}']`);
+      cell.classList.add(gameVariables.currentPlayer === 1 ? "PLAYER" : "OPPONENT", "animated");
+
+      gameVariables.checkForGameOver();
+      document.getElementById("currentTurn").textContent = `${gameVariables.currentPlayer === 1 ? gameVariables.player1Color : gameVariables.player2Color}'s Turn`;
+
+      return;
+    }
+  }
+
+  alert("Column is full! Try another one.");
+}
+function updateScore(winnerPlayer, scores) {
+  localStorage.setItem("scores", JSON.stringify(scores));
+  updateScoreDisplay(scores);
+}
+
+function updateScoreDisplay(scores) {
+  const p1 = gameVariables.player1Color;
+  const p2 = gameVariables.player2Color;
+  document.getElementById("scoreBoard").textContent = `${p1}: ${scores[1]} - ${p2}: ${scores[2]}`;
+}
+
+function loadScores() {
+  const savedScores = localStorage.getItem("scores");
+  if (savedScores) {
+    gameVariables.scores = JSON.parse(savedScores);
+  }
+}
 function playAgainGame() {
-  resetBoard();
-  gameOver = false;
-  currentPlayer = 1;
-  document.getElementById("winnerMessage").classList.remove("show-winner");
-  document.getElementById("winnerMessage").textContent = "";
+  gameVariables.reset();
+  initializeBoard();
+  updateScoreDisplay(gameVariables.scores);
 }
 
 function resetGame() {
-  resetBoard();
-  scores = { 1: 0, 2: 0 };
-  localStorage.removeItem("scores");
-  updateScoreDisplay();
+  gameVariables.resetGame();
+  initializeBoard();
 }
-
 
